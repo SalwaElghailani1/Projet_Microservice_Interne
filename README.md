@@ -12,8 +12,6 @@ et **Swagger UI** pour la documentation API.
 - Consultation des profils utilisateurs.
 - Validation ou rejet des profils par un administrateur.
 - Sécurisation des endpoints via JWT.
-- Gestion des rôles (`ADMIN`) et permissions.
-- Refresh et rotation des tokens pour les sessions utilisateur.
 
 ---
 
