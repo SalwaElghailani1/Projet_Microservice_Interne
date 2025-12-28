@@ -50,6 +50,7 @@ mvn spring-boot:run
 ## Tests
 Pour tester le microservice :
 - Accédez à Swagger : http://localhost:8071/swagger-ui/index.html
+- Accédez à postman
 - Authentifiez-vous avec admin@example.com/admin123
 - Copiez le token JWT
 - Cliquez sur "Authorize" en haut et collez Bearer <votre-token>
