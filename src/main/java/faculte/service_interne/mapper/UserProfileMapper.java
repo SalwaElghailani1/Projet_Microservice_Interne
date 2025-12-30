@@ -12,8 +12,8 @@ public class UserProfileMapper {
     public UserProfile RequesttoEntity(UserProfileRequest request, Integer userId) {
         UserProfile profile = new UserProfile();
         profile.setUserId(userId);
-        profile.setNom(request.getNom());
-        profile.setPrenom(request.getPrenom());
+        //profile.setNom(request.getNom());
+       // profile.setPrenom(request.getPrenom());
         profile.setTelephone(request.getTelephone());
         profile.setAdresse(request.getAdresse());
         profile.setCin(request.getCin());

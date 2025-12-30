@@ -10,5 +10,6 @@ public enum MetierRole {
     MAINTENANCE,
     COMPTABLE,
     MANAGER,
-    ADMIN_INTERNE
+    ADMIN_INTERNE,
+    DEFOULT
 }

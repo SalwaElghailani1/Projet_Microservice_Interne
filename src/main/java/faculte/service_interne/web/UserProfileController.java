@@ -37,7 +37,7 @@ public class UserProfileController {
             @ApiResponse(responseCode = "201", description = "Profil créé avec succès"),
             @ApiResponse(responseCode = "409", description = "Le profil existe déjà")
     })
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<UserProfileResponse> createUserProfile(
             @AuthenticationPrincipal Jwt jwt,
@@ -52,10 +52,13 @@ public class UserProfileController {
             }
             userId = userIdParam;
         } else { // Utilisateur normal
-            userId = jwt.getClaim("userId");
-        }
+            userId = ((Long) jwt.getClaim("userId")).intValue();
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.createUserProfile(userId, request));
+        }
+        String nom = jwt.getClaim("nom");
+        String prenom = jwt.getClaim("prenom");
+        String email = jwt.getClaim("email");
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.createUserProfile(userId,nom,prenom,email,request));
     }
 
     @Operation(summary = "Mettre à jour un profil interne existant (Admin ou user profil)",
@@ -64,7 +67,13 @@ public class UserProfileController {
             @ApiResponse(responseCode = "200", description = "Profil mis à jour avec succès"),
             @ApiResponse(responseCode = "404", description = "Profil non trouvé")
     })
-    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.claims['userId']")
+    @PreAuthorize("hasRole('ADMIN') or ((#userId == authentication.principal.claims['userId']) and (" +
+            "authentication.principal.claims['roles'].contains('ADMIN') or " +
+            "authentication.principal.claims['roles'].contains('HOUSEKEEPING') or " +
+            "authentication.principal.claims['roles'].contains('RECEPTIONNISTE') or " +
+            "authentication.principal.claims['roles'].contains('MANAGER') or " +
+            "authentication.principal.claims['roles'].contains('MAINTENANCE') or " +
+            "authentication.principal.claims['roles'].contains('COMPTABLE')))")
     @PutMapping
     public ResponseEntity<UserProfileResponse> updateUserProfile(
             @AuthenticationPrincipal Jwt jwt,
@@ -79,7 +88,7 @@ public class UserProfileController {
             }
             userId = userIdParam;
         } else {
-            userId = jwt.getClaim("userId");
+            userId = ((Long) jwt.getClaim("userId")).intValue();
         }
 
         return ResponseEntity.ok(service.updateUserProfile(userId, request));
@@ -92,12 +101,33 @@ public class UserProfileController {
             @ApiResponse(responseCode = "404", description = "Profil non trouvé")
     })
 
-    @PreAuthorize("#userId == authentication.principal.claims['userId']")
+    @PreAuthorize(
+            "(#userId == authentication.principal.claims['userId']) and " +
+                    "(authentication.principal.claims['roles'].contains('ADMIN') or " +
+                    " authentication.principal.claims['roles'].contains('HOUSEKEEPING') or " +
+                    " authentication.principal.claims['roles'].contains('RECEPTIONNISTE') or " +
+                    " authentication.principal.claims['roles'].contains('MANAGER') or " +
+                    " authentication.principal.claims['roles'].contains('MAINTENANCE') or " +
+                    " authentication.principal.claims['roles'].contains('COMPTABLE'))"
+    )
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> getMyProfile(@AuthenticationPrincipal Jwt jwt) {
-        Integer userId = jwt.getClaim("userId");
-        return ResponseEntity.ok(service.getUserProfileById(userId));
+        Integer userId = ((Long) jwt.getClaim("userId")).intValue();
+        String nom = jwt.getClaim("nom") != null ? jwt.getClaim("nom") : "Inconnu";
+        String prenom = jwt.getClaim("prenom") != null ? jwt.getClaim("prenom") : "Inconnu";
+        String email = jwt.getClaim("email");
+
+        UserProfileResponse profileResponse;
+        try {
+            profileResponse = service.getUserProfileById(userId);
+        } catch (RuntimeException e) {
+            UserProfileRequest request = new UserProfileRequest();
+            profileResponse = service.createUserProfile(userId, nom, prenom, email, request);
+        }
+
+        return ResponseEntity.ok(profileResponse);
     }
+
 
     @Operation(summary = "Lister tous les profils internes(Admin)",
             description = "Retourne la liste complète des profils internes existants")

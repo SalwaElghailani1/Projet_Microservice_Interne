@@ -2,6 +2,7 @@ package faculte.service_interne.service.impl;
 
 import faculte.service_interne.dto.UserProfileRequest;
 import faculte.service_interne.dto.UserProfileResponse;
+import faculte.service_interne.entities.MetierRole;
 import faculte.service_interne.entities.ProfileStatus;
 import faculte.service_interne.entities.UserProfile;
 import faculte.service_interne.mapper.UserProfileMapper;
@@ -25,12 +26,22 @@ public class UserProfileServiceImpl implements UserProfileService {
     }
 
     @Override
-    public UserProfileResponse createUserProfile(Integer userId, UserProfileRequest request) {
+    public UserProfileResponse createUserProfile(Integer userId,String nom,
+                                                 String prenom,String email, UserProfileRequest request) {
         if (repository.existsByUserId(userId)) {
             throw new RuntimeException("Le profil interne existe déjà pour ce userId.");
         }
+
         UserProfile profile = mapper.RequesttoEntity(request, userId);
+        profile.setNom(nom);
+        profile.setPrenom(prenom);
         profile.setCreatedAt(LocalDateTime.now());
+        if(profile.getMetierRole() == null ) {
+            profile.setMetierRole(MetierRole.DEFOULT);
+        }
+        if(profile.getDepartement() == null || profile.getDepartement().isBlank()) {
+            profile.setDepartement("Inconnu");
+        }
         repository.save(profile);
         return mapper.EntitytoResponse(profile);
     }
@@ -40,8 +51,8 @@ public class UserProfileServiceImpl implements UserProfileService {
         UserProfile profile = repository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Profil interne non trouvé."));
         // Mettre à jour les champs via Mapper
-        profile.setNom(request.getNom());
-        profile.setPrenom(request.getPrenom());
+        //profile.setNom(request.getNom());
+       // profile.setPrenom(request.getPrenom());
         profile.setTelephone(request.getTelephone());
         profile.setAdresse(request.getAdresse());
         profile.setCin(request.getCin());

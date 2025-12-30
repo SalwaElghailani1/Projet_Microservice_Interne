@@ -42,8 +42,8 @@ public class UserProfile {
     private String prenom;
 
     /** Numéro de téléphone (optionnel, mais utile pour le contact) */
-    @Column(unique = true)
     private String telephone;
+    private String email;
 
     /** Adresse de résidence de l'utilisateur */
     private String adresse;
@@ -61,11 +61,11 @@ public class UserProfile {
      * Ce rôle n'a aucun lien avec les rôles de sécurité.
      */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private MetierRole metierRole;
+    @Column(nullable = false,length = 50)
+    private MetierRole metierRole = MetierRole.DEFOULT;;
 
     /** Département ou service de l'utilisateur */
-    @Column(nullable = false)
+   // @Column(nullable = false)
     private String departement;
 
     /** Date d'embauche de l'utilisateur */
@@ -92,8 +92,8 @@ public class UserProfile {
      * REJECTED : profil refusé
      */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ProfileStatus status;
+    @Column(nullable = false,length = 50)
+    private ProfileStatus status = ProfileStatus.DRAFT;;
 
     /** Raison du refus du profil (si statut = REJECTED) */
     private String rejectionReason;

@@ -8,7 +8,8 @@ import java.util.List;
 public interface UserProfileService {
 
     // Créer un profil interne pour un userId donné
-    UserProfileResponse createUserProfile(Integer userId, UserProfileRequest request);
+    UserProfileResponse createUserProfile(Integer userId,String nom,
+                                          String prenom,String email, UserProfileRequest request);
     // Mettre à jour le profil interne existant
     UserProfileResponse updateUserProfile(Integer userId, UserProfileRequest request);
     // Récupérer un profil interne par userId

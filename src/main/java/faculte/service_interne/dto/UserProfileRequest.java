@@ -15,15 +15,15 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class UserProfileRequest {
 
-    @NotBlank
-    private String nom;
-
-    @NotBlank
-    private String prenom;
+//    @NotBlank
+//    private String nom;
+//
+//    @NotBlank
+//    private String prenom;
 
     @Pattern(regexp = "^(\\+212|0)[5-7][0-9]{8}$")
     private String telephone;
-
+    private String email;
     private String adresse;
 
     private String cin;
