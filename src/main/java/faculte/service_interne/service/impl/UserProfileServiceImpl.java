@@ -35,6 +35,7 @@ public class UserProfileServiceImpl implements UserProfileService {
         UserProfile profile = mapper.RequesttoEntity(request, userId);
         profile.setNom(nom);
         profile.setPrenom(prenom);
+        profile.setEmail(email);
         profile.setCreatedAt(LocalDateTime.now());
         if(profile.getMetierRole() == null ) {
             profile.setMetierRole(MetierRole.DEFOULT);
