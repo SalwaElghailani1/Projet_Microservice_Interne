@@ -133,7 +133,7 @@ public class UserProfileController {
             description = "Retourne la liste complète des profils internes existants")
     @ApiResponse(responseCode = "200", description = "Liste des profils récupérée avec succès")
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @GetMapping
     public ResponseEntity<List<UserProfileResponse>> getAllUserProfiles() {
         return ResponseEntity.ok(service.getAllUserProfiles());
