@@ -120,6 +120,16 @@ public class UserProfileServiceImpl implements UserProfileService {
 
 
     @Override
+    public void updateProfileStatus(Integer userId, ProfileStatus status) {
+        UserProfile profile = repository.findByUserId(userId);
+        if(profile == null){
+            throw new RuntimeException("Profil introuvable");
+        }
+        profile.setStatus(status);
+        repository.save(profile);
+    }
+
+    @Override
     public void deleteUserProfile(Integer userId) {
         if (!repository.existsById(userId)) {
             throw new RuntimeException("Profil interne non trouvé.");

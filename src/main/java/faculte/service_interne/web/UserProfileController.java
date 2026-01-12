@@ -3,6 +3,7 @@ package faculte.service_interne.web;
 import faculte.service_interne.dto.UserProfileRequest;
 import faculte.service_interne.dto.UserProfileResponse;
 import faculte.service_interne.entities.MetierRole;
+import faculte.service_interne.entities.ProfileStatus;
 import faculte.service_interne.service.UserProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -136,6 +137,13 @@ public class UserProfileController {
                 profile.setMetierRole(jwtRole);
             }
 
+            // ✅ Si profil en DRAFT ou autre, update status → ON_WORK
+            if (profile.getStatus() == ProfileStatus.DRAFT ||
+                    profile.getStatus() == null) {
+                profile.setStatus(ProfileStatus.ON_WORK);
+                service.updateProfileStatus(userId, ProfileStatus.ON_WORK);
+            }
+
         } catch (RuntimeException e) {
 
             UserProfileRequest request = new UserProfileRequest();
@@ -153,6 +161,15 @@ public class UserProfileController {
         return ResponseEntity.ok(profile);
     }
 
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@AuthenticationPrincipal Jwt jwt) {
+        Integer userId = ((Long) jwt.getClaim("userId")).intValue();
+
+        service.updateProfileStatus(userId, ProfileStatus.OUT_WORK);
+
+        return ResponseEntity.ok("Utilisateur déconnecté, status OUT_WORK");
+    }
 
     @Operation(summary = "Lister tous les profils internes(Admin)",
             description = "Retourne la liste complète des profils internes existants")
