@@ -2,6 +2,7 @@ package faculte.service_interne.web;
 
 import faculte.service_interne.dto.UserProfileRequest;
 import faculte.service_interne.dto.UserProfileResponse;
+import faculte.service_interne.entities.MetierRole;
 import faculte.service_interne.service.UserProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -112,20 +113,44 @@ public class UserProfileController {
     )
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> getMyProfile(@AuthenticationPrincipal Jwt jwt) {
+
         Integer userId = ((Long) jwt.getClaim("userId")).intValue();
-        String nom = jwt.getClaim("nom") != null ? jwt.getClaim("nom") : "Inconnu";
-        String prenom = jwt.getClaim("prenom") != null ? jwt.getClaim("prenom") : "Inconnu";
+        String nom = jwt.getClaim("nom");
+        String prenom = jwt.getClaim("prenom");
         String email = jwt.getClaim("email");
 
-        UserProfileResponse profileResponse;
+        List<String> roles = jwt.getClaim("roles");
+
+        String mainRole = roles.get(0);
+        MetierRole jwtRole = MetierRole.valueOf(mainRole);
+
+
+        UserProfileResponse profile;
+
         try {
-            profileResponse = service.getUserProfileById(userId);
+            profile = service.getUserProfileById(userId);
+
+            // 🔄 synchro role JWT <-> DB
+            if (profile.getMetierRole() != jwtRole) {
+                service.updateMetierRole(userId, jwtRole);
+                profile.setMetierRole(jwtRole);
+            }
+
         } catch (RuntimeException e) {
+
             UserProfileRequest request = new UserProfileRequest();
-            profileResponse = service.createUserProfile(userId, nom, prenom, email, request);
+            request.setMetierRole(jwtRole);
+
+            profile = service.createUserProfile(
+                    userId,
+                    nom != null ? nom : "Inconnu",
+                    prenom != null ? prenom : "Inconnu",
+                    email,
+                    request
+            );
         }
 
-        return ResponseEntity.ok(profileResponse);
+        return ResponseEntity.ok(profile);
     }
 
 
@@ -135,8 +160,10 @@ public class UserProfileController {
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @GetMapping
-    public ResponseEntity<List<UserProfileResponse>> getAllUserProfiles() {
-        return ResponseEntity.ok(service.getAllUserProfiles());
+    public ResponseEntity<List<UserProfileResponse>> getAllUserProfiles(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ResponseEntity.ok(service.getAllUserProfiles(jwt));
     }
 
     @Operation(summary = "Supprimer profil interne (Admin)",

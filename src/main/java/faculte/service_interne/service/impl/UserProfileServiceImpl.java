@@ -8,6 +8,7 @@ import faculte.service_interne.entities.UserProfile;
 import faculte.service_interne.mapper.UserProfileMapper;
 import faculte.service_interne.repository.UserProfileRepository;
 import faculte.service_interne.service.UserProfileService;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -49,22 +50,32 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     public UserProfileResponse updateUserProfile(Integer userId, UserProfileRequest request) {
+
         UserProfile profile = repository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Profil interne non trouvé."));
-        // Mettre à jour les champs via Mapper
-        //profile.setNom(request.getNom());
-       // profile.setPrenom(request.getPrenom());
+
         profile.setTelephone(request.getTelephone());
         profile.setAdresse(request.getAdresse());
         profile.setCin(request.getCin());
-        profile.setMetierRole(request.getMetierRole());
         profile.setDepartement(request.getDepartement());
         profile.setDateEmbauche(request.getDateEmbauche());
         profile.setSuperviseurId(request.getSuperviseurId());
         profile.setUpdatedAt(LocalDateTime.now());
+
         repository.save(profile);
         return mapper.EntitytoResponse(profile);
     }
+
+    @Override
+    public void updateMetierRole(Integer userId, MetierRole role) {
+        UserProfile profile = repository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Profil non trouvé"));
+
+        profile.setMetierRole(role);
+        profile.setUpdatedAt(LocalDateTime.now());
+        repository.save(profile);
+    }
+
 
     @Override
     public UserProfileResponse getUserProfileById(Integer userId) {
@@ -74,12 +85,39 @@ public class UserProfileServiceImpl implements UserProfileService {
     }
 
     @Override
-    public List<UserProfileResponse> getAllUserProfiles() {
-        return repository.findAll()
-                .stream()
-                .map(mapper::EntitytoResponse)
-                .collect(Collectors.toList());
+    public List<UserProfileResponse> getAllUserProfiles(Jwt jwt) {
+
+        List<String> roles = jwt.getClaim("roles");
+
+        boolean isAdmin = roles.contains("ADMIN");
+        boolean isManager = roles.contains("MANAGER");
+
+        // ADMIN ➜ يشوف كلشي
+        if (isAdmin) {
+            return repository.findAll()
+                    .stream()
+                    .map(mapper::EntitytoResponse)
+                    .collect(Collectors.toList());
+        }
+
+        // MANAGER ➜ غير internal users
+        if (isManager) {
+            return repository.findAll()
+                    .stream()
+                    .filter(profile ->
+                            profile.getMetierRole() == MetierRole.HOUSEKEEPING ||
+                                    profile.getMetierRole() == MetierRole.RECEPTIONNISTE ||
+                                    profile.getMetierRole() == MetierRole.MAINTENANCE ||
+                                    profile.getMetierRole() == MetierRole.COMPTABLE ||
+                                    profile.getMetierRole() == MetierRole.MANAGER
+                    )
+                    .map(mapper::EntitytoResponse)
+                    .collect(Collectors.toList());
+        }
+
+        return List.of();
     }
+
 
     @Override
     public void deleteUserProfile(Integer userId) {
